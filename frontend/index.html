@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Project 2 – Python + Vercel</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,12 +25,12 @@
 
     h2 {
       text-align: center;
-      margin-bottom: 20px;
     }
 
     .input-row {
       display: flex;
       gap: 10px;
+      margin-bottom: 15px;
     }
 
     input {
@@ -38,13 +39,12 @@
     }
 
     button {
-      padding: 8px 14px;
+      padding: 8px 12px;
       cursor: pointer;
     }
 
     ul {
-      margin-top: 20px;
-      padding: 0;
+      padding-left: 0;
       list-style: none;
     }
 
@@ -52,8 +52,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 0;
-      border-bottom: 1px solid #eee;
+      margin-bottom: 8px;
+      background: #f1f1f1;
+      padding: 8px 10px;
+      border-radius: 6px;
     }
 
     .delete {
@@ -64,6 +66,7 @@
     }
   </style>
 </head>
+
 <body>
 
 <div class="card">
@@ -86,19 +89,12 @@ async function loadItems() {
   const list = document.getElementById("list");
   list.innerHTML = "";
 
-  items.forEach((text, index) => {
+  items.forEach(item => {
     const li = document.createElement("li");
-
-    const span = document.createElement("span");
-    span.innerText = text;
-
-    const btn = document.createElement("button");
-    btn.innerText = "❌";
-    btn.className = "delete";
-    btn.onclick = () => deleteItem(index);
-
-    li.appendChild(span);
-    li.appendChild(btn);
+    li.innerHTML = `
+      <span>${item.text}</span>
+      <button class="delete" onclick="deleteItem('${item.id}')">Xóa</button>
+    `;
     list.appendChild(li);
   });
 }
@@ -118,8 +114,8 @@ async function addItem() {
   loadItems();
 }
 
-async function deleteItem(index) {
-  await fetch(`${API}/${index}`, { method: "DELETE" });
+async function deleteItem(id) {
+  await fetch(`${API}/${id}`, { method: "DELETE" });
   loadItems();
 }
 
