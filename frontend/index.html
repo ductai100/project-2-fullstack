@@ -1,67 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Project 2 Fullstack (Vercel + Python)</title>
+  <meta charset="UTF-8" />
+  <title>Project 2 – Python Fullstack</title>
   <style>
-    body{font-family:system-ui;background:#f6f7fb}
-    .wrap{max-width:760px;margin:40px auto;background:#fff;padding:20px;border-radius:12px}
-    .row{display:flex;gap:10px}
-    input{flex:1;padding:10px;border:1px solid #ddd;border-radius:8px}
-    button{padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
-    li{padding:6px 0;border-bottom:1px solid #eee}
+    body { font-family: Arial; padding: 40px }
+    input { padding: 8px; width: 200px }
+    button { padding: 8px }
+    li { margin-top: 6px }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h2>Project 2 – Fullstack (Python serverless on Vercel)</h2>
 
-    <div class="row">
-      <input id="txt" placeholder="Nhập nội dung..." />
-      <button id="btn">Add</button>
-    </div>
+<h2>Project 2 – Python + Vercel</h2>
 
-    <ul id="list"></ul>
-  </div>
+<input id="text" placeholder="Nhập nội dung..." />
+<button onclick="addItem()">Add</button>
+
+<ul id="list"></ul>
 
 <script>
-  const API = "/api/items";
-  const txt = document.getElementById("txt");
-  const btn = document.getElementById("btn");
+const API = "/api/items";
+
+async function loadItems() {
+  const res = await fetch(API);
+  const items = await res.json();
   const list = document.getElementById("list");
+  list.innerHTML = "";
+  items.forEach(i => {
+    const li = document.createElement("li");
+    li.innerText = i.text;
+    list.appendChild(li);
+  });
+}
 
-  async function load() {
-    const res = await fetch(API, { cache: "no-store" });
-    const data = await res.json();
-    list.innerHTML = (data || []).map(i => `<li><b>#${i.id}</b> ${escapeHtml(i.text)}</li>`).join("");
+async function addItem() {
+  const input = document.getElementById("text");
+  const value = input.value.trim();
+  if (!value) return alert("Chưa nhập gì");
+
+  const res = await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: value })
+  });
+
+  if (!res.ok) {
+    alert("Add failed");
+    return;
   }
 
-  btn.onclick = async () => {
-    const text = txt.value.trim();
-    if (!text) return alert("Nhập nội dung!");
-    btn.disabled = true;
+  input.value = "";
+  loadItems();
+}
 
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify({ text })
-    });
-
-    btn.disabled = false;
-
-    const data = await res.json();
-    if (data?.error) return alert(data.error);
-
-    txt.value = "";
-    load();
-  };
-
-  function escapeHtml(s){
-    return s.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
-  }
-
-  load();
+loadItems();
 </script>
+
 </body>
 </html>
