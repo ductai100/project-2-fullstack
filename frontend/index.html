@@ -2,22 +2,71 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Project 2 – Python Fullstack</title>
+  <title>Project 2 – Python + Vercel</title>
   <style>
-    body { font-family: Arial; padding: 40px }
-    input { padding: 8px; width: 200px }
-    button { padding: 8px }
-    li { margin-top: 6px }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      min-height: 100vh;
+
+      /* CANH GIỮA */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    ul {
+      margin-top: 20px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
   </style>
 </head>
 <body>
 
-<h2>Project 2 – Python + Vercel</h2>
+<div class="card">
+  <h2>Project 2 – Python + Vercel</h2>
 
-<input id="text" placeholder="Nhập nội dung..." />
-<button onclick="addItem()">Add</button>
+  <div class="input-row">
+    <input id="text" placeholder="Nhập nội dung..." />
+    <button onclick="addItem()">Add</button>
+  </div>
 
-<ul id="list"></ul>
+  <ul id="list"></ul>
+</div>
 
 <script>
 const API = "/api/items";
@@ -37,7 +86,7 @@ async function loadItems() {
 async function addItem() {
   const input = document.getElementById("text");
   const value = input.value.trim();
-  if (!value) return alert("Chưa nhập gì");
+  if (!value) return alert("Chưa nhập nội dung");
 
   const res = await fetch(API, {
     method: "POST",
