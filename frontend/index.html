@@ -2,83 +2,22 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Project 2 – Python + Vercel</title>
-
+  <title>Project 2 – Python Fullstack</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .card {
-      background: white;
-      padding: 30px 40px;
-      border-radius: 10px;
-      width: 420px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    input {
-      flex: 1;
-      padding: 10px;
-    }
-
-    button {
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-
-    ul {
-      padding-left: 0;
-      list-style: none;
-    }
-
-    li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      background: #f1f1f1;
-      padding: 8px 10px;
-      border-radius: 6px;
-    }
-
-    .delete {
-      background: #ff4d4f;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
+    body { font-family: Arial; padding: 40px }
+    input { padding: 8px; width: 200px }
+    button { padding: 8px }
+    li { margin-top: 6px }
   </style>
 </head>
-
 <body>
 
-<div class="card">
-  <h2>Project 2 – Python + Vercel</h2>
+<h2>Project 2 – Python + Vercel</h2>
 
-  <div class="input-row">
-    <input id="text" placeholder="Nhập nội dung..." />
-    <button onclick="addItem()">Add</button>
-  </div>
+<input id="text" placeholder="Nhập nội dung..." />
+<button onclick="addItem()">Add</button>
 
-  <ul id="list"></ul>
-</div>
+<ul id="list"></ul>
 
 <script>
 const API = "/api/items";
@@ -88,13 +27,9 @@ async function loadItems() {
   const items = await res.json();
   const list = document.getElementById("list");
   list.innerHTML = "";
-
-  items.forEach(item => {
+  items.forEach(i => {
     const li = document.createElement("li");
-    li.innerHTML = `
-      <span>${item.text}</span>
-      <button class="delete" onclick="deleteItem('${item.id}')">Xóa</button>
-    `;
+    li.innerText = i.text;
     list.appendChild(li);
   });
 }
@@ -102,20 +37,20 @@ async function loadItems() {
 async function addItem() {
   const input = document.getElementById("text");
   const value = input.value.trim();
-  if (!value) return alert("Chưa nhập nội dung");
+  if (!value) return alert("Chưa nhập gì");
 
-  await fetch(API, {
+  const res = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: value })
   });
 
-  input.value = "";
-  loadItems();
-}
+  if (!res.ok) {
+    alert("Add failed");
+    return;
+  }
 
-async function deleteItem(id) {
-  await fetch(`${API}/${id}`, { method: "DELETE" });
+  input.value = "";
   loadItems();
 }
 

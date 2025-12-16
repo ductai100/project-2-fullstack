@@ -1,71 +1,38 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import json, uuid, os
-import urllib.request
+# api/items.py
+from http.server import BaseHTTPRequestHandler
+import json
+import os
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+DATA_FILE = "/tmp/items.json"
 
-KV_URL = os.getenv("KV_REST_API_URL", "").rstrip("/")
-KV_TOKEN = os.getenv("KV_REST_API_TOKEN", "")
-
-KEY = "project2_items"
-
-class ItemIn(BaseModel):
-    text: str
-
-def kv_request(method: str, path: str, body: dict | None = None):
-    if not KV_URL or not KV_TOKEN:
-        raise RuntimeError("Missing KV_REST_API_URL or KV_REST_API_TOKEN in Vercel env")
-
-    url = f"{KV_URL}{path}"
-    data = None
-    if body is not None:
-        data = json.dumps(body).encode("utf-8")
-
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("Authorization", f"Bearer {KV_TOKEN}")
-    req.add_header("Content-Type", "application/json")
-
-    with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read().decode("utf-8"))
-
-def get_items():
-    # Upstash REST: GET /get/<key>
-    r = kv_request("GET", f"/get/{KEY}")
-    raw = r.get("result")
-    if not raw:
+def load_items():
+    if not os.path.exists(DATA_FILE):
         return []
-    try:
-        return json.loads(raw)
-    except:
-        return []
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-def set_items(items):
-    # Upstash REST: POST /set/<key>  {"value":"..."}
-    kv_request("POST", f"/set/{KEY}", {"value": json.dumps(items, ensure_ascii=False)})
+def save_items(items):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(items, f)
 
-@app.get("/api/items")
-def api_get():
-    return get_items()
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        items = load_items()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(items).encode())
 
-@app.post("/api/items")
-def api_add(item: ItemIn):
-    items = get_items()
-    new_item = {"id": str(uuid.uuid4()), "text": item.text}
-    items.append(new_item)
-    set_items(items)
-    return new_item
+    def do_POST(self):
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+        data = json.loads(body.decode())
 
-@app.delete("/api/items/{item_id}")
-def api_delete(item_id: str):
-    items = get_items()
-    items = [x for x in items if x.get("id") != item_id]
-    set_items(items)
-    return {"ok": True}
+        items = load_items()
+        items.append(data)
+        save_items(items)
+
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"ok": True}).encode())
