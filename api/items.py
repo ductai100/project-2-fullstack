@@ -1,38 +1,45 @@
-# api/items.py
-from http.server import BaseHTTPRequestHandler
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
 import json
 import os
 
-DATA_FILE = "/tmp/items.json"
+app = FastAPI()
 
-def load_items():
-    if not os.path.exists(DATA_FILE):
+DB_FILE = "data.json"
+
+class Item(BaseModel):
+    text: str
+
+def read_db():
+    if not os.path.exists(DB_FILE):
         return []
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
+    with open(DB_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def save_items(items):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(items, f)
+def write_db(data):
+    with open(DB_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        items = load_items()
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(items).encode())
+# GET all
+@app.get("/api/items")
+def get_items():
+    return read_db()
 
-    def do_POST(self):
-        content_length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(content_length)
-        data = json.loads(body.decode())
+# ADD
+@app.post("/api/items")
+def add_item(item: Item):
+    data = read_db()
+    data.append(item.text)
+    write_db(data)
+    return {"ok": True}
 
-        items = load_items()
-        items.append(data)
-        save_items(items)
-
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps({"ok": True}).encode())
+# DELETE (theo index)
+@app.delete("/api/items/{index}")
+def delete_item(index: int):
+    data = read_db()
+    if index < 0 or index >= len(data):
+        return {"error": "Invalid index"}
+    data.pop(index)
+    write_db(data)
+    return {"ok": True}
